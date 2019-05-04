@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="icon" href="/html/favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="/html/favicon.ico" type="image/x-icon" />
+    <title>运营笔记</title>
+  </head>
+  <script src="https://cdn.bootcss.com/vue/2.5.17-beta.0/vue.min.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <body style="margin:0;">
+    <div id="app" class="container">
+    <div class='header'>运营笔记后台</div>
+    <div class='time-axis'>
+      <div class='month'>{{centerMonth + 1}}月</div>
+      <div class='days-box'>
+        <div v-for='(v,i) in days' :key='i' class='day-item'>
+          <div :class="[{'circle-big':i===4},'circle']" @click='changeDateByAxis(i)'>{{v}}</div>
+          <div :class="[{'line-red':i===3 || i===4},'line']" v-if='i < 8'></div>
+        </div>
+      </div>
+    </div>
+    <div class='main'>
+      <div class='input-button'>
+        请选择日期：
+        <input type='date' @change='changeDateByPicker' :value="dateStr">
+        <button style='margin:0 0 0 auto;background:blue;width:100px;' @click="nav('add')">添加新闻</button>
+        <button style='margin-right:0;background:blue;width:100px;' @click="nav('tags')">标签管理</button>
+      </div>
+      <div class='news-box'> 
+        <div>
+          <div class='news-item' v-for='(v,i) in news' :key='i'>
+            <img :src="'files/news/'+v.NSID+'.jpg'">
+            <div class='_main'>
+              <div>{{v.title}}</div>
+              <div class='overview'>{{v.detail}}</div>
+              <div class='foot'>
+                <div class='time'>{{v.display_time}}</div>
+                <div class='tag'>{{v.name}}</div>
+              </div>
+            </div>
+            <div class='_link' @click="nav('edit',i)">编辑</div>
+            <div class='_link' @click="deleteNews(i)" style='margin-left:10px;'>删除</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class='blackMask' v-if='!login'>
+      <div>
+        <input type='password' placeholder="请输入后台管理密码" v-model='password'>
+        <button @click='_login'>登录</button>
+      </div>
+    </div>
+    </div>
+  </body>
+  <script src="js/server.js"></script>
+  <script>
+    const app = new Vue({
+      el: '#app',
+      data: {
+        news:[],
+        days:[],
+        centerMonth: 0,
+        centerYear: 0,
+        login: false,
+        password:''
+      },
+      computed:{
+        dateStr(){
+          return `${this.centerYear}-${('0' + (this.centerMonth+1)).slice(-2)}-${('0' + this.days[4]).slice(-2)}`
+        }
+      },
+      methods: {
+        nav(page,i) {
+          if(page === 'add')
+            window.open('edit.html')
+          else if(page === 'tags')
+            window.open('tags.html')
+          else if(page === 'edit'){
+            const news = this.news[i]
+            console.log(news)
+            window.open(`edit.html?NSID=${news.NSID}&title=${news.title}&detail=${news.detail}&display_time=${news.display_time}&TGID=${news.TGID}`)
+          }
+        },
+        deleteNews(i){
+          if (confirm("确定要删除吗!"))
+            axios
+            .get(`${RootUrl}deleteNews?NSID=${this.news[i].NSID}`)
+            .then(res => {
+              if(res.data === 'ok') alert('删除成功')
+              this.getNewsByDate()
+            })
+            .catch(err => {
+              console.log(err)
+            })
+        },
+        changeDateByAxis(i){
+          this.setDaysArr(new Date(this.centerYear,this.centerMonth,this.days[4] + i-4))
+        },
+        changeDateByPicker(e){
+          const date = e.target.value.split(/\D/).map(Number)
+          this.setDaysArr(new Date(date[0],date[1]-1,date[2]))
+        },
+        shiftFromToday(today,shift){
+          return new Date(today.getTime() + shift * 24 * 60 * 60 * 1000).getDate()
+        },
+        setDaysArr(dateObj){
+          const centerDate = dateObj || new Date()
+          this.days = Array.from(new Array(9), (v , i) => {
+            return this.shiftFromToday(centerDate,i - 4)
+          })
+          this.centerMonth = centerDate.getMonth()
+          this.centerYear = centerDate.getFullYear()
+          this.getNewsByDate()
+        },
+        getNewsByDate(){
+          axios
+            .get(`${RootUrl}getNewsByDate?date=${this.dateStr}`)
+            .then(res => {
+              this.news = res.data
+              console.log(this.news);
+            })
+            .catch(err => {
+              console.log(err)
+            })
+        },
+        _login(){
+          axios
+            .post(`${RootUrl}login`,{password: this.password})
+            .then(res => {
+              if(res.data === 'ok') {
+                this.login = true
+              } else {
+                this.login = false
+                alert('登录失败')
+              }
+              this.password = ''
+            })
+            .catch(err => {
+              console.log(err)
+            })
+        }
+      },
+      mounted() {
+        this.setDaysArr()
+      }
+    })
+  </script>
+<style>
+.header{
+  height: 90px;
+  width: 100%;
+  font: bold 32px/90px not specified;
+  background: red;
+  color: white;
+  text-align: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+.main{
+  width: 85%;
+  margin-left: 15%;
+  display: inline-flex;
+}
+.input-button{
+  position: fixed;
+  padding: 0 8%;
+  top: 90px;
+  left: 15%;
+  display: flex;
+  align-items: center;
+  color: blue;
+  background: white;
+  width: 85%;
+  box-sizing: border-box;
+}
+.main input{
+  height: 35px;
+  width: 150px;
+  border-radius: 3px;
+  margin: 10px;
+  border:1px solid #b6b6b6;
+  font-size: 16px;
+  line-height: 16px;
+  outline:none; 
+}
+.main button{
+  height: 35px;
+  width: 65px;
+  border-radius: 7px;
+  background: red;
+  margin: 20px;
+  font-size: 18px;
+  line-height: 35px;
+  border:none;
+  color:white;
+  outline:none;
+}
+.news-item{
+  width: 80%;
+  margin: 10px 10%;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #DDD;
+}
+.news-item img {
+  height: 120px;
+  width: 120px;
+  margin: 20px 20px 20px 0;
+}
+.news-box{
+  margin-top:180px;
+  width: 100%
+}
+.news-item ._main {
+  height: 120px;
+  width: 70%;
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+  font-size: 20px;
+  line-height: 20px;
+}
+.overview{
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  font-size: 15px;
+  line-height: 20px;
+  letter-spacing: 1px;
+  color: #555;
+}
+.foot{
+  height: 20px;
+  display: flex;
+  align-items: center;
+}
+.time{
+  font-size: 16px;
+  line-height: 18px;
+  color: #555;
+}
+.tag{
+  background: blue;
+  font-size: 12px;
+  line-height: 18px;
+  color:white;
+  border-radius: 2px;
+  padding: 0 5px;
+  margin-left: 10px;
+}
+.news-item ._link{
+  margin: 0 0 0 auto;
+  color:blue;
+  font-size: 16px;
+  line-height: 16px;
+  cursor: default;
+}
+
+.time-axis{
+  display: inline-flex;
+  position: fixed;
+  width: 15%;
+  justify-content: center;
+  align-items: center;
+  margin-top: 200px;
+}
+.month{
+  font: bold 25px/25px not specified;
+  color:#333;
+}
+.days-box{
+  height: calc(100% - 90px);
+  margin: 0 0 0 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.day-item{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.day-item .circle{
+  height: 28px;
+  width: 28px;
+  border-radius: 50%;
+  margin: 0;
+  background:#aaa;
+  color:white;
+  font: bold 14px/28px not specified;
+  text-align: center;
+  text-decoration: none;
+  cursor: default;
+}
+.day-item .circle-big{
+  height: 50px;
+  width: 50px;
+  opacity: 1;
+  background:red;
+  color:white;
+  font-size:20px;
+  line-height: 50px;
+}
+.day-item .line{
+  height: 12px;
+  margin: 4px 0;
+  width: 2px;
+  background: #AAA;
+}
+.day-item .line-red{
+  height: 18px;
+  margin: 2px 0;
+  width: 2px;
+  background: red;
+}
+.blackMask{
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0,0,0,.8)
+}
+.blackMask div{
+  border-radius: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 20px;
+}
+.blackMask input{
+  height: 35px;
+  width: 280px;
+  padding: 0 10px;
+  border-radius: 3px;
+  border:1px solid #b6b6b6;
+  font-size: 16px;
+  line-height: 35px;
+  outline: none; 
+}
+.blackMask button{
+  height: 35px;
+  width: 95px;
+  border-radius: 7px;
+  background: #D00;
+  font-size: 16px;
+  line-height: 35px;
+  border: none;
+  color: white;
+  margin-left: 20px;
+  outline: none;
+}
+
+</style>
+</html>

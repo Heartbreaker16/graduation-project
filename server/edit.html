@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="css/style.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>编辑新闻</title>
+  </head>
+  <script src="https://cdn.bootcss.com/vue/2.5.17-beta.0/vue.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue-cropper@0.4.9/dist/index.min.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="js/server.js"></script>
+  <body style='margin: 0;'>
+    <div id="app">
+      <div class='header'>运营笔记后台<span>编辑新闻</span></div>
+      <div class='edit-box'>
+        <div class="subtitle">新闻头图</div>
+        <div style='display:flex;align-items:flex-end;'>
+            <div class='image-preview'>
+              <img id="finalImg" :src="modelSrc" width="100%" />
+            </div>
+            <button class='upload-img' id="replaceImg" @click='startUploadImg=true'>更换图片</button>
+        </div>
+        <div class="subtitle">标题</div>
+        <input v-model='title' class='title' placeholder='请输入新闻标题'>
+        <div class="subtitle">正文</div>
+        <textarea v-model='detail' class='content' placeholder='请输入新闻正文'></textarea>
+        <div class="subtitle">标签</div>
+        <select class='select' @change="selectTag">
+          <option v-for='(v,i) in tags' :value='v.TGID' :selected='v.TGID == selectedTagID'>{{v.name}}</option>
+        </select>
+        <div class="subtitle">发布日期</div>
+        <input type="date" :value='date' @change='selectDate'>
+        <button @click='submit'>发布</button>
+      </div>
+      <div class="model"  v-if='startUploadImg' @click="model = false">
+        <div class="model-show">
+          <img src="" />
+        </div>
+      </div>
+
+      <div class="cut" v-if='startUploadImg'>
+        <div class='left'>
+          <vue-cropper style='height:450px;width:550px;background:#EEE;border:1px solid #DDD;' ref="cropper" :img="imgSrc" auto-crop @real-time="realTime" fixed center-box full></vue-cropper>
+          <div class="test-button">
+            <label class="btn" for="uploads">{{imgSrc?'重新选择':'选择图片'}}</label>
+            <input type="file" id="uploads" style="position:absolute; clip:rect(0 0 0 0);" accept="image/png, image/jpeg, image/gif, image/jpg" @change="uploadImg"/>
+            <button v-if='imgSrc' @click="rotateLeft" class="btn">旋转</button>
+          </div>
+        </div>
+        <div class='right'>
+          <span>图像预览：</span>
+          <div class="show-preview" >
+            <div :style="{'width': previews.w + 'px', 'height': previews.h + 'px', 'zoom': 200/previews.h, 'overflow': 'hidden'}">
+              <img :src="previews.url" :style="previews.img"/>
+            </div>
+          </div>
+          <button v-if='imgSrc' @click="finish" class="btn" style='margin:auto 0 0 0;'>上传图片</button>
+        </div>
+        <div class='cancel' @click="startUploadImg=false;imgSrc=''">×</div>
+      </div>
+    </div>
+  </body>
+  <script>
+    Vue.use(window['vue-cropper'])
+    let blob, NSID
+    const app = new Vue({
+      el: '#app',
+      data: {
+        model: false,
+        modelSrc: '',
+        previews: {},
+        imgSrc: '',
+        title: '',
+        detail: '',
+        selectedTagID: 0,
+        date: '',
+        tags: [],
+        startUploadImg: false,
+        img:''
+      },
+      methods: {
+        rotateLeft() {
+          this.$refs.cropper.rotateLeft()
+        },
+        add_img(event) {
+          this.img = event.target.files[0]
+        },
+        finish($event,type = 'blob') {
+          if (type === 'blob') {
+            this.$refs.cropper.getCropBlob(data => {
+              blob = data
+              this.modelSrc = window.URL.createObjectURL(data)
+            })
+          } else {
+            this.$refs.cropper.getCropData(data => {
+              this.modelSrc = data
+            })
+          }
+          this.startUploadImg = false
+        },
+        realTime(data) {
+          this.previews = data
+        },
+        uploadImg(e) {
+          //上传图片
+          // this.option.img
+          var file = e.target.files[0]
+          if (!/\.(jpg|jpeg|png|JPG|PNG)$/.test(e.target.value)) {
+            alert('图片类型必须是jpeg,jpg,png中的一种')
+            return false
+          }
+          var reader = new FileReader()
+          reader.onload = e => {
+            let data
+            if (typeof e.target.result === 'object')
+              // 把Array Buffer转化为blob 如果是base64不需要
+              data = window.URL.createObjectURL(new Blob([e.target.result]))
+            else data = e.target.result
+            
+            this.imgSrc = data
+          }
+          // 转化为base64
+          // reader.readAsDataURL(file)
+          // 转化为blob
+          reader.readAsArrayBuffer(file)
+        },
+        selectTag(e){
+          this.selectedTagID = e.target.value
+        },
+        selectDate(e){
+          this.date = e.target.value
+        },
+        submit(){
+          if(!this.modelSrc) { alert('新闻头图不能为空'); return}
+          const title = removeBlank(this.title)
+          if(!title) { alert('标题不能为空'); return}
+          const detail = removeBlank(this.detail)
+          if(!detail) { alert('新闻内容不能为空'); return}
+          if(this.date.length === 0) { alert('请选择发布日期'); return}
+
+          if(confirm('确认要提交吗?'))
+            axios
+              .get(`${RootUrl}${NSID ? 'updateNews':'addNews'}?title=${title}&detail=${detail}&TGID=${this.selectedTagID}&display_time=${this.date}${NSID ? '&NSID='+NSID :''}`)
+              .then(res => {
+                if(res.data[0].code !== 1){
+                  alert('上传失败')
+                } else{
+                  if(blob){
+                    const form = new FormData()
+                    form.append('file', blob, res.data[0].NSID + '.jpg')
+                    axios
+                      .post(`${RootUrl}addNewsImg`, form)
+                      .then(res => {
+                        if(res.data === 'ok'){
+                          alert('发布成功')
+                          this.clear()
+                        }
+                      })
+                      .catch(error => {
+                        alert('上传图片出错！')
+                      })
+                  } else{
+                    alert('发布成功')
+                    this.clear()
+                  }
+                }
+              })
+              .catch(error => {
+                alert('上传出错！')
+              })
+        },
+        clear(){
+          this.loadTags()
+          this.title = ''
+          this.detail = ''
+          this.date = ''
+          this.modelSrc = ''
+        },
+        loadTags(TGID){
+          axios
+            .get(`${RootUrl}allTags`)
+            .then(res => {
+              console.log(res)
+              this.tags = res.data
+              this.selectedTagID = TGID || this.tags[0].TGID
+            })
+            .catch(err => {
+              console.log(err)
+            })
+        },
+      },
+      mounted() {
+        const editData = getQueryObject()
+        console.log(editData)
+        this.loadTags(editData.TGID)
+        this.title = editData.title || ''
+        this.detail = editData.detail || ''
+        this.modelSrc = editData.NSID ? `files/news/${editData.NSID}.jpg` : ''
+        this.date = editData.display_time || ''
+        NSID = editData.NSID
+        blob = null
+      }
+    })
+  </script>
+  <style>
+    .cut {
+      position: fixed;
+      z-index: 11;
+      background: white;
+      width: 850px;
+      height: 500px;
+      padding: 30px;
+      top: calc((100% - 500px)/2);
+      left: calc((100% - 850px)/2);
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      display: flex;
+      box-sizing: border-box;
+    }
+    .cut .left{
+      width: 75%;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .cut .right{
+      width: 25%;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+    .right span{
+      font-size: 17px;
+      line-height: 35px;
+      align-self: flex-start;
+    }
+    .cut .cancel{
+      position: absolute;
+      top:10px;
+      right: 10px;
+      text-align: center;
+      font-size: 23px;
+      line-height: 32px;
+      width:32px;
+      height:32px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, .15);
+      color:white;
+      cursor: default;
+    }
+    .test-button {
+      display: flex;
+      flex-wrap: wrap;
+      align-content: center;
+      justify-content: center;
+    }
+    .show-preview{
+      height: 200px;
+      width: 200px;
+      overflow: hidden;
+      background: #EEE;
+      border: 1px solid #DDD;
+    }
+    .btn {
+      display: inline-block;
+      line-height: 16px;
+      white-space: nowrap;
+      text-align: center;
+      box-sizing: border-box;
+      margin: 20px 10px 0px 0px;
+      padding: 9px 15px;
+      font-size: 16px;
+      border-radius: 4px;
+      color: #fff;
+      background: #8C85E6;
+      outline:none;
+      border: none;
+    }
+    .model {
+      position: fixed;
+      z-index: 10;
+      width: 100vw;
+      height: 100vh;
+      overflow: auto;
+      top: 0;
+      left: 0;
+      background: rgba(0, 0, 0, 0.8);
+    }
+
+    .model-show {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100vw;
+      height: 100vh;
+    }
+    
+    .header {
+      height: 90px;
+      width: 100%;
+      font-size: 32px;
+      font-weight: bold;
+      line-height: 90px;
+      background: red;
+      color: white;
+      text-align: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+    }
+    .header span{
+      font-size: 18px;
+      font-weight: normal;
+      line-height: 30px;
+      margin-left: 15px;
+    }
+    .edit-box {
+      width: 70%;
+      margin: 100px 15%;
+      display: flex;
+      flex-direction: column;
+    }
+    .edit-box .subtitle {
+      margin: 20px 0 10px 0;
+      font: bold 20px/40px not specified;
+      color: #333;
+    }
+    .edit-box input,
+    .edit-box textarea,
+    .edit-box button {
+      outline: none;
+    }
+    .edit-box .image-preview {
+        width: 250px;
+        height: 250px;
+        border: dashed 1px #555;
+        padding: 5px;
+        margin-right: 40px;
+    }
+    .edit-box .image-preview img{
+      overflow: hidden;
+    }
+    .edit-box .upload-img{
+        background: red;
+        font: 18px/40px not specified;
+        padding: 0 7px;
+        height: 40px;
+    }
+    .edit-box .title {
+      border: 1px solid blue;
+      font-size: 18px;
+      line-height: 18px;
+      padding: 10px;
+      width: 100%;
+      border-radius: 6px;
+      height: 18px;
+    }
+    .edit-box .content {
+      border: 1px solid blue;
+      padding: 10px;
+      width: 100%;
+      border-radius: 6px;
+      height: 300px;
+      font: 18px/24px not specified;
+    }
+    .edit-box .select{
+       width: 200px;
+       height: 30px;
+    }
+    .edit-box input {
+      height: 35px;
+      width: 180px;
+      border-radius: 3px;
+      border:1px solid #b6b6b6;
+      font-size: 16px;
+      line-height: 35px;
+      outline:none; 
+    }
+    .edit-box button {
+      height: 45px;
+      width: 95px;
+      border-radius: 7px;
+      background: blue;
+      font-size: 20px;
+      line-height: 45px;
+      border: none;
+      color: white;
+      margin-top: 30px;
+    }
+  </style>
+</html>

@@ -1,0 +1,64 @@
+Flex(display, justify = flex-start, align = stretch, direction = row)
+    display display
+    if (justify != flex-start)
+        justify-content justify
+    if (align != stretch)
+        align-items align
+    if (direction != row)
+        flex-direction direction
+Border(top = 1rpx, right, bottom, left, color = #EEE)
+    if (top != 0)
+        border-top top solid color
+    if (right != 0)
+        border-right right solid color
+    if (bottom != 0)
+        border-bottom bottom solid color
+    if (left != 0)
+        border-left left solid color
+BorderBox()
+    box-sizing border-box
+Font(size, height = size, weight = normal)
+    if (weight == normal)
+        font size / height !specified
+    else
+        font weight size / height !specified
+Height_Width(height, width = height)
+    height height
+    width width
+Background(bgcolor = #F6F6F6)
+    background bgcolor
+Triangle(direction,base,height,color=#BBB)
+    Height_Width(0)
+    if(direction==up)
+        border-bottom height solid color
+        border-left (base / 2) solid transparent
+        border-right (base / 2) solid transparent
+    if(direction==down)
+        border-top height solid color
+        border-left (base / 2) solid transparent
+        border-right (base / 2) solid transparent
+    if(direction==left)
+        border-right height solid color
+        border-top (base / 2) solid transparent
+        border-bottom (base / 2) solid transparent
+    if(direction==right)
+        border-left height solid color
+        border-top (base / 2) solid transparent
+        border-bottom (base / 2) solid transparent
+themeColor = #316D31
+
+.loadimg
+    animation loading 1s steps(12) infinite
+@-webkit-keyframes loading
+  0%
+    transform rotate(0)
+  to
+    transform rotate(1turn)
+.fade
+    opacity 0.5
+.hover
+    background-color #EFEFEF !important
+.hide
+    display none !important
+.red-text
+    color themeColor

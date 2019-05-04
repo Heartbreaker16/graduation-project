@@ -1,0 +1,40 @@
+{
+  "pages": [
+    "pages/dateView/main",
+    "pages/monthView/main",
+    "pages/newsDetail/main",
+    "pages/canvas/main",
+    "pages/likes/main"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#316D31",
+    "navigationBarTextStyle": "white"
+  },
+  "tabBar": {
+    "color": "#AAAAAA",
+    "selectedColor": "#316D31",
+    "borderStyle": "black",
+    "backgroundColor": "#FFFFFF",
+    "list": [
+      {
+        "selectedIconPath": "/static/imgs/tab/1_selected.png",
+        "iconPath": "/static/imgs/tab/1.png",
+        "pagePath": "pages/dateView/main",
+        "text": "日视图"
+      },
+      {
+        "selectedIconPath": "/static/imgs/tab/2_selected.png",
+        "iconPath": "/static/imgs/tab/2.png",
+        "pagePath": "pages/monthView/main",
+        "text": "月视图"
+      },
+      {
+        "selectedIconPath": "/static/imgs/tab/2_selected.png",
+        "iconPath": "/static/imgs/tab/2.png",
+        "pagePath": "pages/likes/main",
+        "text": "点赞文章"
+      }
+    ]
+  }
+}
