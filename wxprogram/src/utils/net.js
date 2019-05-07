@@ -58,33 +58,36 @@ function correctTime(timeStr, format='date'){
 }
 function loadNews(year, month, day, type, rootUrl) {
   return new Promise(resolve => {
-    wx.request({
-      url: rootUrl + 'getNewsByDate',
-      data: {
-        date: `${year}-${('0' + (month+1)).slice(-2)}-${('0' + day).slice(-2)}`,
-        openid: wx.getStorageSync('openid')
-      },
-      success: res => {
-        let news = []
-        let object = {}
-        // 日视图和月视图的缓存分开，便于管理，优化速度
-        wx.setStorageSync(`DailyNews_${type}`, res.data)
-        res.data.forEach((v, index) => {
-          if (v.name != object.tags) {
-            news.push(object)
-            object = {
-              tags: v.name,
-              index,
-              arr: [v]
+    const openid = wx.getStorageSync('openid')
+    if(openid)
+      wx.request({
+        url: rootUrl + 'getNewsByDate',
+        data: {
+          date: `${year}-${('0' + (month+1)).slice(-2)}-${('0' + day).slice(-2)}`,
+          openid
+        },
+        success: res => {
+          let news = []
+          let object = {}
+          // 日视图和月视图的缓存分开，便于管理，优化速度
+          wx.setStorageSync(`DailyNews_${type}`, res.data)
+          res.data.forEach((v, index) => {
+            if (v.name != object.tags) {
+              news.push(object)
+              object = {
+                tags: v.name,
+                index,
+                arr: [v]
+              }
+            } else {
+              object.arr.push(v)
             }
-          } else {
-            object.arr.push(v)
-          }
-        })
-        news.push(object)
-        news.splice(0, 1)
-        resolve(news)
-      }
-    })
+          })
+          news.push(object)
+          news.splice(0, 1)
+          resolve(news)
+        }
+      })
+    else getOpenid(rootUrl).then(() => loadNews(year, month, day, type, rootUrl).then(e => resolve(e)))
   })
 }

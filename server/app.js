@@ -1,6 +1,7 @@
 const express = require('express')
 const multer = require('multer')
 const mysql = require('mysql')
+const fs = require('fs')
 
 const FilePath = require('path').join(__dirname, 'files')
 const strFilter = str => {
@@ -17,23 +18,10 @@ const storage = multer.diskStorage({
     cb(null, file.originalname)
   }
 })
-const correctTime = (myDate, format = 'date') => {
-  const twoNum = num => {
-    return ('0' + num).slice(-2)
-  }
-  switch (format) {
-    case 'date':
-      return `${myDate.getFullYear()}-${twoNum(myDate.getMonth() + 1)}-${twoNum(myDate.getDate())}`
-    case 'full':
-      return `${myDate.getFullYear()}-${twoNum(myDate.getMonth() + 1)}-${twoNum(myDate.getDate())} ${twoNum(myDate.getHours())}:${twoNum(myDate.getMinutes())}`
-    case 'DateObj':
-      return myDate
-  }
-}
 const connectSQLConfig = {
   host: 'localhost',
-  user: 'root',
-  password: 'root',
+  user: 'newroot',
+  password: '123456',
   database: 'calendar',
   charset: 'utf8mb4'
 }
@@ -47,13 +35,13 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(express.static(FilePath))
 
-// app.get('/', (req, res) => {
-//   res.writeHead(200, { 'Content-Type': 'text/html' })
-//   fs.readFile(`${FilePath}/html/list.html`, 'utf-8', (err, data) => {
-//     if (err) throw err
-//     res.end(data)
-//   })
-// })
+app.get('/', (req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/html' })
+  fs.readFile(`${FilePath}/html/list.html`, 'utf-8', (err, data) => {
+    if (err) throw err
+    res.end(data)
+  })
+})
 app.get('/register', (req, res) => {
   const connection = mysql.createConnection(connectSQLConfig)
   connection.connect()
@@ -157,10 +145,10 @@ app.get('/updateTag', (req, res) => {
     connection.end()
   })
 })
-app.get('/addNews', (req, res) => {
+app.post('/addNews', (req, res) => {
   const connection = mysql.createConnection(connectSQLConfig)
   connection.connect()
-  const news = req.query
+  const news = req.body
   const SQL = `
       INSERT INTO news(title,detail,display_time,TGID)
       VALUES ('${strFilter(news.title)}','${strFilter(news.detail)}','${news.display_time}','${news.TGID}')`
@@ -173,10 +161,10 @@ app.get('/addNews', (req, res) => {
 app.post('/addNewsImg', upload.single('file'), (req, res) => {
   res.send('ok')
 })
-app.get('/updateNews', (req, res) => {
+app.post('/updateNews', (req, res) => {
   const connection = mysql.createConnection(connectSQLConfig)
   connection.connect()
-  const news = req.query
+  const news = req.body
   const SQL = `
       UPDATE news
       SET title='${strFilter(news.title)}',detail='${strFilter(news.detail)}',display_time='${news.display_time}',TGID=${news.TGID}

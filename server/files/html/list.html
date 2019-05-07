@@ -4,13 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="http://207.148.90.74:3000/html/style.css" />
     <link rel="icon" href="/html/favicon.ico" type="image/x-icon" />
     <link rel="shortcut icon" href="/html/favicon.ico" type="image/x-icon" />
     <title>运营笔记</title>
   </head>
   <script src="https://cdn.bootcss.com/vue/2.5.17-beta.0/vue.min.js"></script>
   <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="http://207.148.90.74:3000/html/server.js"></script>
   <body style="margin:0;">
     <div id="app" class="container">
     <div class='header'>运营笔记后台</div>
@@ -33,7 +34,7 @@
       <div class='news-box'> 
         <div>
           <div class='news-item' v-for='(v,i) in news' :key='i'>
-            <img :src="'files/news/'+v.NSID+'.jpg'">
+            <img :src="rootUrl + 'news/'+v.NSID+'.jpg'">
             <div class='_main'>
               <div>{{v.title}}</div>
               <div class='overview'>{{v.detail}}</div>
@@ -56,7 +57,6 @@
     </div>
     </div>
   </body>
-  <script src="js/server.js"></script>
   <script>
     const app = new Vue({
       el: '#app',
@@ -65,8 +65,9 @@
         days:[],
         centerMonth: 0,
         centerYear: 0,
-        login: false,
-        password:''
+        login: true,
+        password:'',
+        rootUrl:''
       },
       computed:{
         dateStr(){
@@ -76,13 +77,13 @@
       methods: {
         nav(page,i) {
           if(page === 'add')
-            window.open('edit.html')
+            window.open('html/edit.html')
           else if(page === 'tags')
-            window.open('tags.html')
+            window.open('html/tags.html')
           else if(page === 'edit'){
             const news = this.news[i]
             console.log(news)
-            window.open(`edit.html?NSID=${news.NSID}&title=${news.title}&detail=${news.detail}&display_time=${news.display_time}&TGID=${news.TGID}`)
+            window.open(`html/edit.html?NSID=${news.NSID}&title=${news.title}&detail=${news.detail}&display_time=${news.display_time}&TGID=${news.TGID}`)
           }
         },
         deleteNews(i){
@@ -132,7 +133,8 @@
             .post(`${RootUrl}login`,{password: this.password})
             .then(res => {
               if(res.data === 'ok') {
-                this.login = true
+                this.login = true                
+                localStorage['lastLogin'] = new Date().getTime()
               } else {
                 this.login = false
                 alert('登录失败')
@@ -142,10 +144,15 @@
             .catch(err => {
               console.log(err)
             })
+        },
+        checkLogin(){
+          this.login = localStorage['lastLogin'] && (new Date().getTime() - localStorage['lastLogin'] < 3*60*1000)
         }
       },
       mounted() {
+        this.checkLogin()
         this.setDaysArr()
+        this.rootUrl = RootUrl
       }
     })
   </script>

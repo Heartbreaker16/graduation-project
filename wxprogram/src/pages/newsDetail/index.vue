@@ -68,7 +68,8 @@ export default {
       shifting: false,
       shift: 0,
       showTip: false,
-      type: ''
+      type: '',
+      handling: false
     }
   },
   methods: {
@@ -147,6 +148,8 @@ export default {
       wx.navigateTo({ url })
     },
     changeLike(i){
+      if(this.handling) return
+      this.handling = true
       const news = this.newsArr[i]
       wx.request({
         url: this.rootUrl + 'changeLike',
@@ -163,6 +166,7 @@ export default {
             if(this.type !== 'month') wx.removeStorageSync('DailyNews_month')
             if(this.type !== 'likes') wx.removeStorageSync('DailyNews_likes')
           }
+          this.handling = false
         }
       })
     },
@@ -183,6 +187,7 @@ export default {
     if(wx.getStorageSync('showTip')){
       this.showTip = true
     }
+    this.handling = false
     this.showModal = false
     const data = this.$root.$mp.query
     console.log(data);

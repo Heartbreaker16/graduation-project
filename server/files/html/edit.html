@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="style.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>编辑新闻</title>
@@ -10,7 +10,7 @@
   <script src="https://cdn.bootcss.com/vue/2.5.17-beta.0/vue.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue-cropper@0.4.9/dist/index.min.js"></script>
   <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-  <script src="js/server.js"></script>
+  <script src="server.js"></script>
   <body style='margin: 0;'>
     <div id="app">
       <div class='header'>运营笔记后台<span>编辑新闻</span></div>
@@ -23,9 +23,9 @@
             <button class='upload-img' id="replaceImg" @click='startUploadImg=true'>更换图片</button>
         </div>
         <div class="subtitle">标题</div>
-        <input v-model='title' class='title' placeholder='请输入新闻标题'>
+        <input v-model='title' class='title' placeholder='请输入新闻标题' maxlength="48">
         <div class="subtitle">正文</div>
-        <textarea v-model='detail' class='content' placeholder='请输入新闻正文'></textarea>
+        <textarea v-model='detail' class='content' placeholder='请输入新闻正文' maxlength="1980"></textarea>
         <div class="subtitle">标签</div>
         <select class='select' @change="selectTag">
           <option v-for='(v,i) in tags' :value='v.TGID' :selected='v.TGID == selectedTagID'>{{v.name}}</option>
@@ -142,7 +142,7 @@
 
           if(confirm('确认要提交吗?'))
             axios
-              .get(`${RootUrl}${NSID ? 'updateNews':'addNews'}?title=${title}&detail=${detail}&TGID=${this.selectedTagID}&display_time=${this.date}${NSID ? '&NSID='+NSID :''}`)
+              .post(`${RootUrl}${NSID ? 'updateNews':'addNews'}`,{title, detail, TGID:this.selectedTagID, display_time:this.date, NSID})
               .then(res => {
                 if(res.data[0].code !== 1){
                   alert('上传失败')
@@ -197,7 +197,7 @@
         this.loadTags(editData.TGID)
         this.title = editData.title || ''
         this.detail = editData.detail || ''
-        this.modelSrc = editData.NSID ? `files/news/${editData.NSID}.jpg` : ''
+        this.modelSrc = editData.NSID ? `${RootUrl}/news/${editData.NSID}.jpg` : ''
         this.date = editData.display_time || ''
         NSID = editData.NSID
         blob = null

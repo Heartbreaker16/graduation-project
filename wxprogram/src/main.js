@@ -11,7 +11,7 @@ Vue.mixin({
     return {
       net: '', //网络服务接口
       calendar: '', //日历函数
-      rootUrl: 'http://localhost:3000/' //日历函数
+      rootUrl: 'http://207.148.90.74:3000/' //日历函数
     }
   },
   created() {
@@ -21,3 +21,7 @@ Vue.mixin({
 })
 const app = new Vue(App)
 app.$mount()
+
+wx.setEnableDebug({
+  enableDebug: true
+})
