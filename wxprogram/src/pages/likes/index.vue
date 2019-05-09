@@ -61,18 +61,18 @@ export default {
     box-sizing border-box
     border-box 1rpx solid #EEE
     >div
-      height 130rpx
+      height 200rpx
       width calc(100% - 230rpx)
       .title
-        height 100rpx
+        height 170rpx
         font 35rpx/40rpx !specified
       .time
         height 30rpx
-        font 29rpx/30rpx !specified
+        font 30rpx/30rpx !specified
         color grey
     img 
       width 200rpx
-      height 130rpx
+      height 200rpx
       border-radius 10rpx
       margin-left 30rpx
   .nodata

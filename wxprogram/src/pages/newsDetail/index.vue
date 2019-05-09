@@ -72,6 +72,12 @@ export default {
       handling: false
     }
   },
+  watch:{
+    index(newIdx,oldIdx){
+      if(this.newsArr[oldIdx + (this.type === 'likes' ? -1 : 0)])
+        this.readNews(this.newsArr[oldIdx + (this.type === 'likes' ? -1 : 0)].NSID)
+    }
+  },
   methods: {
     // 页面首次加载，从缓存中获得新闻列表 
     loadNews(data) {
@@ -89,6 +95,12 @@ export default {
         this.newsArr = arr
         this.loadWatcher()
       }
+    },
+    readNews(NSID){
+      wx.request({
+        url: this.rootUrl + 'readNews',
+        data: {NSID}
+      })
     },
     loadLikesNews(data){
       const arr =  wx.getStorageSync('DailyNews_likes')
@@ -211,6 +223,7 @@ export default {
     }
   },
   onUnload() {
+    this.readNews(this.newsArr[this.index - 1].NSID)
     this.loaded = false
     this.shift = 0
     this.index = -1

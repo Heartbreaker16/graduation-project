@@ -10,8 +10,11 @@
       </div>
       <div class='slogan'>运营日历——运趋势热点，营人心人性</div>
     </div>
-    <div v-if='likeStatus>-1' class='button like' @tap='changeLike' hover-class='fade'><img :src="'/static/imgs/'+(likeStatus?'like_on':'like')+'.png'"></div>
-    <div class='button _share' @tap='share' hover-class='fade'><img src='/static/imgs/share.png'></div>
+    <!-- <div v-if='likeStatus>-1' class='button like' @tap='changeLike' hover-class='fade'><img :src="'/static/imgs/'+(likeStatus?'like_on':'like')+'.png'"></div>
+    <div class='button _share' @tap='share' hover-class='fade'><img src='/static/imgs/share.png'></div> -->
+    <img class='_share' v-if='likeStatus>-1' @tap='changeLike' :src="'/static/imgs/'+(likeStatus?'like':'like_grey')+'.png'">
+    <img class='like' @tap='share' src='/static/imgs/share.png'>
+    
   </div>
 </template>
 
@@ -53,16 +56,22 @@ export default {
       Font(27rpx)
       margin-top 16rpx
       color gray
-  .button
-    Height_Width(70rpx)
-    Flex(flex,center,center)
-    margin-left 10rpx
-    border-radius 50%
-    background themeColor
-    &._share img
-      Height_Width(50rpx)
-      margin-right 5rpx
-    &.like img
-      Height_Width(40rpx)
+  ._share
+    Height_Width(60rpx)
+    margin-right 15rpx
+  .like
+    Height_Width(50rpx)
+
+  // .button
+  //   Height_Width(70rpx)
+  //   Flex(flex,center,center)
+  //   margin-left 10rpx
+  //   border-radius 50%
+  //   background themeColor
+  //   &._share img
+  //     Height_Width(50rpx)
+  //     margin-right 5rpx
+  //   &.like img
+  //     Height_Width(40rpx)
 
 </style>

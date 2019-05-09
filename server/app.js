@@ -18,12 +18,16 @@ const storage = multer.diskStorage({
     cb(null, file.originalname)
   }
 })
-const connectSQLConfig = {
-  host: 'localhost',
-  user: 'newroot',
-  password: '123456',
-  database: 'calendar',
-  charset: 'utf8mb4'
+const connectMySQL = () => {
+  const connection = mysql.createConnection({
+    host: 'localhost',
+    user: 'newroot',
+    password: '123456',
+    database: 'calendar',
+    charset: 'utf8mb4'
+  })
+  connection.connect()
+  return connection
 }
 const upload = multer({ storage })
 
@@ -43,8 +47,7 @@ app.get('/', (req, res) => {
   })
 })
 app.get('/register', (req, res) => {
-  const connection = mysql.createConnection(connectSQLConfig)
-  connection.connect()
+  const connection = connectMySQL()
   const user = req.query
   let SQL = `
     SELECT *
@@ -68,8 +71,7 @@ app.get('/register', (req, res) => {
   })
 })
 app.post('/login', (req, res) => {
-  const connection = mysql.createConnection(connectSQLConfig)
-  connection.connect()
+  const connection = connectMySQL()
   const SQL = 'SELECT * FROM admin_password'
   connection.query(SQL, (err, row) => {
     if (err) throw err
@@ -79,8 +81,7 @@ app.post('/login', (req, res) => {
   })
 })
 app.get('/addTag', (req, res) => {
-  const connection = mysql.createConnection(connectSQLConfig)
-  connection.connect()
+  const connection = connectMySQL()
   const data = req.query
   let SQL = `
     SELECT *
@@ -104,8 +105,7 @@ app.get('/addTag', (req, res) => {
   })
 })
 app.get('/allTags', (req, res) => {
-  const connection = mysql.createConnection(connectSQLConfig)
-  connection.connect()
+  const connection = connectMySQL()
   const SQL = `
     SELECT TGID, name
     FROM tags
@@ -117,8 +117,7 @@ app.get('/allTags', (req, res) => {
   })
 })
 app.get('/deleteTag', (req, res) => {
-  const connection = mysql.createConnection(connectSQLConfig)
-  connection.connect()
+  const connection = connectMySQL()
   const data = req.query
   const SQL = `
     DELETE from tags
@@ -131,8 +130,7 @@ app.get('/deleteTag', (req, res) => {
   })
 })
 app.get('/updateTag', (req, res) => {
-  const connection = mysql.createConnection(connectSQLConfig)
-  connection.connect()
+  const connection = connectMySQL()
   const data = req.query
   const SQL = `
     UPDATE tags
@@ -146,8 +144,7 @@ app.get('/updateTag', (req, res) => {
   })
 })
 app.post('/addNews', (req, res) => {
-  const connection = mysql.createConnection(connectSQLConfig)
-  connection.connect()
+  const connection = connectMySQL()
   const news = req.body
   const SQL = `
       INSERT INTO news(title,detail,display_time,TGID)
@@ -162,8 +159,7 @@ app.post('/addNewsImg', upload.single('file'), (req, res) => {
   res.send('ok')
 })
 app.post('/updateNews', (req, res) => {
-  const connection = mysql.createConnection(connectSQLConfig)
-  connection.connect()
+  const connection = connectMySQL()
   const news = req.body
   const SQL = `
       UPDATE news
@@ -177,12 +173,12 @@ app.post('/updateNews', (req, res) => {
   })
 })
 app.get('/getNewsByDate', (req, res) => {
-  const connection = mysql.createConnection(connectSQLConfig)
-  connection.connect()
+  const connection = connectMySQL()
   let SQL = `
     SELECT news.*, name
     FROM tags,news
     WHERE display_time = '${req.query.date}' AND news.TGID = tags.TGID
+    ORDER BY TGID, news.add_time
   `
   connection.query(SQL, (err, row) => {
     if (err) throw err
@@ -221,10 +217,10 @@ app.get('/getNewsByDate', (req, res) => {
   })
 })
 app.get('/changeLike', (req, res) => {
-  const connection = mysql.createConnection(connectSQLConfig)
-  connection.connect()
+  const connection = connectMySQL()
   const data = req.query
-  const SQL = parseInt(data.targetStatus) ? 
+  const like = parseInt(data.targetStatus)
+  SQL = like ? 
   `
     INSERT INTO likes ( NSID, USID )
     VALUES (${data.NSID}, (SELECT USID FROM users WHERE openid = '${data.openid}'))
@@ -235,13 +231,34 @@ app.get('/changeLike', (req, res) => {
   `
   connection.query(SQL, (err, row) => {
     if (err) throw err
+    SQL = `
+      UPDATE news 
+      SET like_num = like_num + ${like ? 1 : -1}
+      WHERE NSID = ${data.NSID}
+    `
+    connection.query(SQL, (err, row) => {
+      if (err) throw err
+      res.send('ok')
+      connection.end()
+    })
+  })
+})
+app.get('/readNews', (req, res) => {
+  const connection = connectMySQL()
+  const data = req.query
+  const SQL =  `
+    UPDATE news 
+    SET read_num = read_num + 1
+    WHERE NSID = ${data.NSID}
+  `
+  connection.query(SQL, (err, row) => {
+    if (err) throw err
     res.send('ok')
     connection.end()
   })
 })
 app.get('/mylikes', (req, res) => {
-  const connection = mysql.createConnection(connectSQLConfig)
-  connection.connect()
+  const connection = connectMySQL()
   const SQL =  `
     SELECT news.*
     FROM news, users, likes
@@ -259,14 +276,14 @@ app.get('/mylikes', (req, res) => {
   })
 })
 app.get('/deleteNews', (req, res) => {
-  const connection = mysql.createConnection(connectSQLConfig)
-  connection.connect()
+  const connection = connectMySQL()
   const SQL = `
     DELETE FROM news
     WHERE NSID = ${req.query.NSID}
   `
   connection.query(SQL, (err, row) => {
     if (err) throw err
+    fs.unlinkSync(`${FilePath}/news/${req.query.NSID}.jpg`)
     res.send('ok')
     connection.end()
   })

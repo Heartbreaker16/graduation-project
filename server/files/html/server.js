@@ -1,4 +1,4 @@
-RootUrl = 'http://207.148.90.74:3000/'
+RootUrl = 'http://101.132.123.189:3000/'
 
 removeBlank = str => {
   return str.replace(/(^\s*)|(\s*$)/g, '')

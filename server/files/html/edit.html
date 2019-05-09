@@ -175,7 +175,8 @@
           this.loadTags()
           this.title = ''
           this.detail = ''
-          this.date = ''
+          const now = new Date()
+          this.date = `${now.getFullYear()}-${('0'+(now.getMonth()+1)).slice(-2)}-${('0'+now.getDate()).slice(-2)}`
           this.modelSrc = ''
         },
         loadTags(TGID){
@@ -193,12 +194,12 @@
       },
       mounted() {
         const editData = getQueryObject()
-        console.log(editData)
+        const now = new Date()
         this.loadTags(editData.TGID)
-        this.title = editData.title || ''
-        this.detail = editData.detail || ''
+        this.title = editData.NSID ? localStorage['title'] : ''
+        this.detail = editData.NSID ? localStorage['detail'] : ''
         this.modelSrc = editData.NSID ? `${RootUrl}/news/${editData.NSID}.jpg` : ''
-        this.date = editData.display_time || ''
+        this.date = editData.display_time || `${now.getFullYear()}-${('0'+(now.getMonth()+1)).slice(-2)}-${('0'+now.getDate()).slice(-2)}`
         NSID = editData.NSID
         blob = null
       }
