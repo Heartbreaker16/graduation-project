@@ -8,12 +8,12 @@
   ],
   "window": {
     "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#316D31",
+    "navigationBarBackgroundColor": "#fc3e46",
     "navigationBarTextStyle": "white"
   },
   "tabBar": {
     "color": "#AAAAAA",
-    "selectedColor": "#316D31",
+    "selectedColor": "#fc3e46",
     "borderStyle": "black",
     "backgroundColor": "#FFFFFF",
     "list": [
@@ -30,8 +30,8 @@
         "text": "月视图"
       },
       {
-        "selectedIconPath": "/static/imgs/tab/2_selected.png",
-        "iconPath": "/static/imgs/tab/2.png",
+        "selectedIconPath": "/static/imgs/like.png",
+        "iconPath": "/static/imgs/like_grey.png",
         "pagePath": "pages/likes/main",
         "text": "点赞文章"
       }

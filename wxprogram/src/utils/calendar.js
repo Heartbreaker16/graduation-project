@@ -546,7 +546,7 @@ var calendar = {
             solarHoliday,
             lunarHoliday,
             solarWeekHoliday,
-            holidayMark: solarHoliday || solarWeekHoliday || lunarHoliday || Term
+            holidayMark: solarWeekHoliday || solarHoliday || lunarHoliday || Term
         }
     },
     /**
@@ -623,17 +623,17 @@ var calendar = {
       * @param sd solarday
       * @return string
       */
-     getSolarWeekHoliday: function(ly,lm,ld) {
-      const firstDayofMonth = new Date(ly,lm-1,1).getDay()
-      const todayofMonth = new Date(ly,lm-1,ld).getDay()
+     getSolarWeekHoliday: function(sy,sm,sd) {
+      const firstDayofMonth = new Date(sy,sm-1,1).getDay()
+      const todayofMonth = new Date(sy,sm-1,sd).getDay()
       if(todayofMonth == 0){
-        const dayshift = ld - (8 - (firstDayofMonth == 0 ? 7 : firstDayofMonth))
-        switch (lm){
-          case 5: if(dayshift==7) return '母亲节' //五月第二星期日             
-          case 6: if(dayshift==14) return '父亲节' //六月第三星期日
+        const dayshift = sd - (8 - (firstDayofMonth == 0 ? 7 : firstDayofMonth))
+        switch (sm){
+          case 5: return dayshift == 7 ? '母亲节' : null //五月第二星期日             
+          case 6: return dayshift == 14 ? '父亲节' : null //六月第三星期日
           default: return null
         }
-      }else return null
+      } else return null
     },
     /**
       * 除夕的检测 (阴历最后一天不一定是腊月三十)

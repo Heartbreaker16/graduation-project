@@ -12,7 +12,8 @@
       <img :src="rootUrl+'news/'+v.NSID+'.jpg'" mode='widthFix'>
       <div class='title'>{{v.title}}</div>
       <div class='main'>
-        <wxParse :content='v.detail' noData='加载中……'/>
+        <!-- <wxParse :content='v.detail' noData='加载中……'/> -->
+        <rich-text class='detail' :nodes='v.detail' space='emsp'/>
       </div>
       <Share :year='year || v.year' :month='month || v.month-1' :day='day || v.day' :likeStatus='v.likes ? 1:0' @share='showModal=true' @changeLike='changeLike(i)'/>
     </scroll-view>
@@ -51,11 +52,10 @@
 </template>
 
 <script>
-import wxParse from 'mpvue-wxparse'
 import Share from '@/components/ShareItem'
 import ShareMenu from '@/components/ShareMenu'
 export default {
-  components: { wxParse, Share, ShareMenu },
+  components: { Share, ShareMenu },
   data() {
     return {
       newsArr: [],
@@ -223,7 +223,7 @@ export default {
     }
   },
   onUnload() {
-    this.readNews(this.newsArr[this.index - 1].NSID)
+    this.readNews(this.newsArr[this.index + (this.type === 'likes' ? 0 : -1)].NSID)
     this.loaded = false
     this.shift = 0
     this.index = -1
@@ -260,6 +260,10 @@ scroll-view
   .main
     Font(30rpx, 60rpx)
     color #777
+    .detail
+      font 33rpx/52rpx !specified
+      color grey
+      text-align justify
   .link
     Font(35rpx)
     margin 20rpx 0 0 20rpx
