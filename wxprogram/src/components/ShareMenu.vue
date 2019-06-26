@@ -33,7 +33,7 @@ export default {
     },
     raiseCall(){
       this.exit()
-      this.net.raiseCallNum()
+      // this.net.raiseCallNum()
     },
     a(){
       console.log('a')

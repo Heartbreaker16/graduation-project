@@ -11,7 +11,7 @@ Vue.mixin({
     return {
       net: null, //网络服务接口
       calendar: null, //日历函数
-      rootUrl: 'http://101.132.123.189:3000/' //日历函数
+      rootUrl: 'http://207.148.90.74:3000/' //服务器
     }
   },
   created() {

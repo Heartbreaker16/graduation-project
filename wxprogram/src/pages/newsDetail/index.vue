@@ -83,7 +83,7 @@ export default {
     loadNews(data) {
       const arr =  wx.getStorageSync(`DailyNews_${data.type}`)
       // 若缓存不存在或与首页日期不一致，则重新加载
-      if (arr.length == 0 || data.NSID != arr[this.index-1].NSID) {
+      if (arr.length == 0 || !arr[this.index-1] || data.NSID != arr[this.index-1].NSID) {
         this.net.loadNews(this.year, this.month, this.day, data.type,this.rootUrl).then(() => {
           this.newsArr = wx.getStorageSync(`DailyNews_${data.type}`)
           this.index = this.id2Index(data.NSID,this.newsArr) + 1
@@ -218,7 +218,7 @@ export default {
   onShareAppMessage() {
     return {
       title: this.newsArr[this.index-1].title,
-      imageUrl: this.newsArr[this.index-1].img,
+      imageUrl: this.rootUrl+'news/'+ this.newsArr[this.index-1].NSID + '.jpg',
       path: `${this.$mp.page.route}?type=${this.type}&NSID=${this.newsArr[this.index-1].NSID}&year=${this.year}&month=${this.month}&day=${this.day}`
     }
   },
